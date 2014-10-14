@@ -1,6 +1,6 @@
-# corelib
+# settings
 
-Core KnightOS system library.
+Simple settings management application.
 
 ## Compiling
 
