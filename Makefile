@@ -1,22 +1,9 @@
-OUTDIR:=bin/
-BINDIR:=$(OUTDIR)bin/
+include .knightos/variables.make
 
-DEPENDENCIES=../corelib/
+ALL_TARGETS:=$(BIN)settings
 
-all: package
-	
-package: $(BINDIR)settings
-	kpack settings-0.1.0.pkg $(OUTDIR)
+$(BIN)settings: main.asm
+	mkdir -p $(BIN)
+	$(AS) $(ASFLAGS) --listing $(OUT)main.list main.asm $(BIN)settings
 
-$(BINDIR)settings: settings.asm
-	mkdir -p $(BINDIR)
-	$(AS) $(ASFLAGS) --define "$(PLATFORM)" --include "$(INCLUDE);$(PACKAGEPATH)/settings/;$(DEPENDENCIES)" settings.asm bin/bin/settings
-
-clean:
-	rm -rf $(OUTDIR)
-	rm -rf settings-0.1.0.pkg
-
-install: package
-	kpack -e -s settings-0.1.0.pkg $(PREFIX)
-
-.PHONY: all clean
+include .knightos/sdk.make
