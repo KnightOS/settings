@@ -33,6 +33,9 @@ redraw:
     ld b, 6
     pcall(drawStr)
     
+    kld(hl, setDateTimeStr)
+    
+    pcall(drawStr)
     kld(hl, backStr)
     pcall(drawStr)
     
@@ -78,7 +81,7 @@ doUp:
     pcall(putSpriteXOR)
     xor a
     ret
-#define NB_ITEM 2
+#define NB_ITEM 3
 doDown:
     kld(hl, item)
     ld a, (hl)
@@ -106,7 +109,9 @@ doSelect:
     jp (hl)
     
 itemTable:
-    .dw printSystemInfo, exit
+    .dw printSystemInfo
+    .dw setDateTime
+    .dw exit
     
 printSystemInfo:
     pcall(clearBuffer)
@@ -183,6 +188,10 @@ _:  pcall(fastCopy)
     pop de
     kld(hl, notFoundStr)
     jr .writeVersion
+
+setDateTime:
+    ; TODO
+    ret
     
 exit:
     pop hl
@@ -205,6 +214,8 @@ bootCodeVersionStr:
     
 systemInfoStr:
     .db "System info\n", 0
+setDateTimeStr:
+    .db "Set date/time\n", 0
 backStr:
     .db "Back", 0
 notFoundStr:
