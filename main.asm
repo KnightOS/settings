@@ -189,28 +189,8 @@ _:  pcall(fastCopy)
     kld(hl, notFoundStr)
     jr .writeVersion
 
-setDateTime:
-    pcall(clearBuffer)
-    
-    kld(hl, windowTitle)
-    xor a
-    corelib(drawWindow)
-    
-    kld(hl, backStr)
-    ld de, 0x0632
-    push de
-        pcall(drawStr)
-    pop de
-    ld d, 2
-    kld(hl, caretIcon)
-    pcall(putSpriteOR)
+#include "datetime.asm"
 
-_:  pcall(fastCopy)
-    pcall(flushKeys)
-    corelib(appWaitKey)
-    jr nz, -_
-    ret
-    
 exit:
     pop hl
     ret
