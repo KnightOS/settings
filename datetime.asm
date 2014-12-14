@@ -21,7 +21,8 @@ setDateTime:
     kld((current_minute), a)
     ld a, d
     kld((current_second), a)
-    
+
+.redraw:
     pcall(clearBuffer)
 
     kld(hl, windowTitle)
@@ -115,21 +116,48 @@ setDateTime:
     pcall(drawChar)
     
 .drawSelection:
-    ld de, 0x061c
+    kld(hl, selected_field_indicator_x)
+    kld(a, (selected_field))
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld d, (hl)
+    ld e, 0x1c
     ld b, 3
     kld(hl, caretUpIcon)
     pcall(putSpriteOR)
-    ld de, 0x0626
+    ld e, 0x26
     ld b, 3
     kld(hl, caretDownIcon)
     pcall(putSpriteOR)
     
-
-_:  pcall(fastCopy)
+    pcall(fastCopy)
+    
+.waitForKey:
     pcall(flushKeys)
     corelib(appWaitKey)
-    jr nz, -_
+    
+    ; arrow keys (move selected field)
+    cp kRight
+    jr nz, +_
+    kld(a, (selected_field))
+    inc a
+    kld((selected_field), a)
+    kjp(.redraw)
+_:  
+    cp kLeft
+    jr nz, +_
+    kld(a, (selected_field))
+    dec a
+    kld((selected_field), a)
+    kjp(.redraw)
+_:  
+    ; Clear (cancel)
+    cp kClear
+    jr nz, +_
     ret
+_:  
+    jr .waitForKey
 
 unsupported:
     
@@ -185,7 +213,7 @@ instruction_message:
     .db "Use the arrow keys to set the\nclock and press Enter to\nsave or Clear to cancel.", 0
 
 selected_field_indicator_x:
-    .db 6, 14, 20, 35, 41
+    .db 6, 22, 34, 50, 60
 
 caretUpIcon:
     .db 0b00010000
