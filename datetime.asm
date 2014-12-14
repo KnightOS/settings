@@ -157,6 +157,24 @@ _:
     jr nz, +_
     ret
 _:  
+    ; Enter (save)
+    cp kEnter
+    jr nz, +_
+    kld(ix, (current_year))
+    kld((current_month), a)
+    ld l, a
+    kld((current_day), a)
+    ld h, a
+    kld((current_hour), a)
+    ld b, a
+    kld((current_minute), a)
+    ld c, a
+    kld((current_second), a)
+    ld d, a
+    pcall(convertTimeToTicks)
+    pcall(setClock)
+    ret
+_:  
     jr .waitForKey
 
 unsupported:
