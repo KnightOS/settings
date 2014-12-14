@@ -28,7 +28,7 @@ redraw:
     corelib(drawWindow)
     
     ; Print items
-    ld de, 0x0508
+    ld de, 0x0608
     kld(hl, systemInfoStr)
     ld b, 6
     pcall(drawStr)
