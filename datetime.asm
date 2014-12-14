@@ -152,6 +152,16 @@ _:
     kld((selected_field), a)
     kjp(.redraw)
 _:  
+    cp kUp
+    jr nz, +_
+    kcall(upPressed)
+    kjp(.redraw)
+_:  
+    cp kDown
+    jr nz, +_
+    kcall(downPressed)
+    kjp(.redraw)
+_:  
     ; Clear (cancel)
     cp kClear
     jr nz, +_
@@ -202,6 +212,42 @@ drawDecAPadded:
 
 .noPadding:
     pcall(drawDecA)
+    ret
+
+upPressed:
+    push af
+        kld(a, (selected_field))
+        
+        cp 0
+        kcall(z, increaseYear)
+        cp 1
+        kcall(z, increaseMonth)
+    pop af
+    
+    ret
+
+increaseYear:
+    push hl
+        kld(hl, (current_year))
+        inc hl
+        kld((current_year), hl)
+    pop hl
+    ret
+
+increaseMonth:
+    push af
+        kld(a, (current_month))
+        inc a
+        cp 12
+        jr c, +_
+        kcall(increaseYear)
+        sub a, 12
+_:      kld((current_month), a)
+    pop af
+    
+    ret
+
+downPressed:
     ret
 
 ; variables
