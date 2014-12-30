@@ -222,6 +222,12 @@ upPressed:
         kcall(z, increaseYear)
         cp 1
         kcall(z, increaseMonth)
+        cp 2
+        kcall(z, increaseDay)
+        cp 3
+        kcall(z, increaseHour)
+        cp 4
+        kcall(z, increaseMinute)
     pop af
     
     ret
@@ -234,6 +240,12 @@ downPressed:
         kcall(z, decreaseYear)
         cp 1
         kcall(z, decreaseMonth)
+        cp 2
+        kcall(z, decreaseDay)
+        cp 3
+        kcall(z, decreaseHour)
+        cp 4
+        kcall(z, decreaseMinute)
     pop af
     
     ret
@@ -259,6 +271,45 @@ _:      kld((current_month), a)
     
     ret
 
+increaseDay:
+    push af
+        kld(a, (current_day))
+        inc a
+        cp 31
+        jr c, +_
+        kcall(increaseMonth)
+        sub a, 31
+_:      kld((current_day), a)
+    pop af
+    
+    ret
+
+increaseHour:
+    push af
+        kld(a, (current_hour))
+        inc a
+        cp 24
+        jr c, +_
+        kcall(increaseDay)
+        sub a, 24
+_:      kld((current_hour), a)
+    pop af
+    
+    ret
+
+increaseMinute:
+    push af
+        kld(a, (current_minute))
+        inc a
+        cp 60
+        jr c, +_
+        kcall(increaseHour)
+        sub a, 60
+_:      kld((current_minute), a)
+    pop af
+    
+    ret
+
 decreaseYear:
     push hl
         kld(hl, (current_year))
@@ -279,6 +330,46 @@ _:      kld((current_month), a)
     pop af
     
     ret
+
+decreaseDay:
+    push af
+        kld(a, (current_day))
+        dec a
+        cp 128
+        jr c, +_
+        kcall(decreaseMonth)
+        add a, 31
+_:      kld((current_day), a)
+    pop af
+    
+    ret
+
+decreaseHour:
+    push af
+        kld(a, (current_hour))
+        dec a
+        cp -1
+        jr nz, +_
+        kcall(decreaseDay)
+        add a, 24
+_:      kld((current_hour), a)
+    pop af
+    
+    ret
+
+decreaseMinute:
+    push af
+        kld(a, (current_minute))
+        dec a
+        cp -1
+        jr nz, +_
+        kcall(decreaseHour)
+        add a, 60
+_:      kld((current_minute), a)
+    pop af
+    
+    ret
+
 
 ; variables
 current_year:
