@@ -226,6 +226,18 @@ upPressed:
     
     ret
 
+downPressed:
+    push af
+        kld(a, (selected_field))
+        
+        cp 0
+        kcall(z, decreaseYear)
+        cp 1
+        kcall(z, decreaseMonth)
+    pop af
+    
+    ret
+
 increaseYear:
     push hl
         kld(hl, (current_year))
@@ -247,7 +259,25 @@ _:      kld((current_month), a)
     
     ret
 
-downPressed:
+decreaseYear:
+    push hl
+        kld(hl, (current_year))
+        dec hl
+        kld((current_year), hl)
+    pop hl
+    ret
+
+decreaseMonth:
+    push af
+        kld(a, (current_month))
+        dec a
+        cp 128
+        jr c, +_
+        kcall(decreaseYear)
+        add a, 12
+_:      kld((current_month), a)
+    pop af
+    
     ret
 
 ; variables
