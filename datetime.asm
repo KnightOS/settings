@@ -19,8 +19,6 @@ setDateTime:
     kld((current_hour), a)
     ld a, c
     kld((current_minute), a)
-    ld a, d
-    kld((current_second), a)
 
 .redraw:
     pcall(clearBuffer)
@@ -179,8 +177,7 @@ _:
     ld b, a
     kld((current_minute), a)
     ld c, a
-    kld((current_second), a)
-    ld d, a
+    ld d, 0
     pcall(convertTimeToTicks)
     pcall(setClock)
     ret
@@ -381,8 +378,6 @@ current_day:
 current_hour:
     .db 0
 current_minute:
-    .db 0
-current_second:
     .db 0
 selected_field: ; 0 = year, 1 = month, 2 = day, 3 = hour, 4 = minute
     .db 0
