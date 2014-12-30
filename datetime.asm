@@ -140,6 +140,9 @@ setDateTime:
     jr nz, +_
     kld(a, (selected_field))
     inc a
+    cp 5
+    jr nz, $+3
+    ld a, 4
     kld((selected_field), a)
     kjp(.redraw)
 _:  
@@ -147,6 +150,9 @@ _:
     jr nz, +_
     kld(a, (selected_field))
     dec a
+    cp -1
+    jr nz, $+3
+    ld a, 0
     kld((selected_field), a)
     kjp(.redraw)
 _:  
