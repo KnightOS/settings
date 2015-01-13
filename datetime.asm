@@ -397,7 +397,7 @@ _:      kld((current_minute), a)
 monthLength:
     ld a, e
     cp 1
-    jr nz, +_ ; if not February, avoid the costly leap year computation
+    ;jr nz, +_ ; if not February, avoid the costly leap year computation
     kcall(isLeapYear)
 _:  push hl \ push bc
         cp 1
@@ -420,9 +420,60 @@ _:      ld b, 0
 ;; Outputs:
 ;;    A: 1 if it is a leap year; 0 if it is not
 isLeapYear:
-    ; TODO implement
-    ld a, 0
     
+    push bc \ push de
+        
+        ; divisible by 400?
+        ld a, h
+        ld c, l
+        ld de, 400
+        pcall(divACByDE) ; remainder in hl
+        
+        ld a, h
+        cp 0
+        jr nz, .notDivisibleBy400
+        ld a, l
+        cp 0
+        jr nz, .notDivisibleBy400
+    pop de \ pop bc
+    
+    ld a, 1
+    ret
+    
+.notDivisibleBy400:
+        
+        ; divisible by 100?
+        ld c, 100
+        push hl
+            pcall(divHLByC) ; remainder in a
+            cp 0
+            jr nz, .notDivisibleBy100
+        pop hl
+    pop de \ pop bc
+    
+    ld a, 0
+    ret
+    
+.notDivisibleBy100:
+        pop hl
+        
+        ; divisible by 4?
+        ld c, 4
+        push hl
+            pcall(divHLByC) ; remainder in a
+            cp 0
+            jr nz, .notDivisibleBy4
+        pop hl
+    pop de \ pop bc
+    
+    ld a, 1
+    ret
+    
+.notDivisibleBy4:
+        pop hl
+    pop de \ pop bc
+    
+    ld a, 0
     ret
 
 ;; weekday
