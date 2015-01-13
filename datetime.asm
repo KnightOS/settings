@@ -35,7 +35,7 @@ setDateTime:
     pcall(drawStr)
     
     ; draw the date/time
-    .drawDate:
+.drawDate:
     
     ; first, draw the year (that is actually pretty complicated since drawDecHL
     ; is not implemented yet)
@@ -233,6 +233,8 @@ upPressed:
         kcall(z, increaseMinute)
     pop af
     
+    kcall(ensureDayWithinBounds)
+    
     ret
 
 downPressed:
@@ -250,6 +252,8 @@ downPressed:
         cp 4
         kcall(z, decreaseMinute)
     pop af
+    
+    kcall(ensureDayWithinBounds)
     
     ret
 
@@ -385,6 +389,23 @@ _:      kld((current_minute), a)
     
     ret
 
+; ensures that the day is not higher than the month length
+ensureDayWithinBounds:
+    kld(hl, (current_year))
+    kld(a, (current_month))
+    ld e, a
+    kcall(monthLength)
+    ld b, a
+    
+    kld(a, (current_day))
+    ; if a >= b, then do a := b - 1
+    cp b
+    jr c, +_
+    ld a, b
+    dec a
+    kld((current_day), a)
+_:  ret
+
 
 ; TODO The next functions should be moved to the kernel
 
@@ -398,7 +419,7 @@ _:      kld((current_minute), a)
 monthLength:
     ld a, e
     cp 1
-    ;jr nz, +_ ; if not February, avoid the costly leap year computation
+    jr nz, +_ ; if not February, avoid the costly leap year computation
     kcall(isLeapYear)
 _:  push hl \ push bc
         cp 1
