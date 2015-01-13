@@ -2,7 +2,7 @@ include .knightos/variables.make
 
 ALL_TARGETS:=$(BIN)settings $(APPS)settings.app
 
-$(BIN)settings: main.asm
+$(BIN)settings: *.asm
 	mkdir -p $(BIN)
 	$(AS) $(ASFLAGS) --listing $(OUT)main.list main.asm $(BIN)settings
 

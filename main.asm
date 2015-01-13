@@ -22,6 +22,15 @@ start:
     kld(de, corelibPath)
     pcall(loadLibrary)
     
+    ; Check whether the clock is supported
+    pcall(getTime)
+    ; to test the code path for calculators with no clock:
+    ;or 1 ; reset the Z flag
+    jr z, +_
+    ld a, 0
+    kld((clock_supported), a)
+_:
+    
 redraw:
     kld(hl, windowTitle)
     xor a
@@ -32,10 +41,18 @@ redraw:
     kld(hl, systemInfoStr)
     ld b, 6
     pcall(drawStr)
-
+    kld(hl, receiveOSStr)
+    pcall(drawStr)
+    kld(a, (clock_supported))
+    cp 0
+    jr z, +_
+    kld(hl, setDateTimeStr)
+    pcall(drawStr)
+_:  kld(hl, backStr)
+    pcall(drawStr)
     pcall(newline)
-_:
-    kld(hl, (item))
+    
+_:  kld(hl, (item))
     add hl, hl
     ld b, h
     ld c, l
@@ -75,12 +92,21 @@ doUp:
     pcall(putSpriteXOR)
     xor a
     ret
-#define NB_ITEM 3
+#define NB_ITEM 4
 doDown:
     kld(hl, item)
     ld a, (hl)
     inc a
-    cp NB_ITEM
+    push af
+        ld c, NB_ITEM
+        kld(a, (clock_supported))
+        cp 0
+        jr nz, +_ ; if clock isn't supported, there is one option less
+        ld a, c
+        dec a
+        ld c, a
+_:  pop af
+    cp c
     ret nc
     ld (hl), a
     kld(hl, caretIcon)
@@ -90,7 +116,13 @@ doDown:
 doSelect:
     kld(hl, (item))
     ld h, 0
-    kld(de, itemTable)
+    push af
+        kld(a, (clock_supported))
+        kld(de, itemTableClock)
+        cp 0
+        jr nz, +_
+        kld(de, itemTableNoClock)
+_:  pop af
     add hl, hl
     add hl, de
     ld e, (hl)
@@ -102,8 +134,15 @@ doSelect:
     pop de \ kld(de, redraw) \ push de
     jp (hl)
     
-itemTable:
-    .dw printSystemInfo, receiveOS, exit
+itemTableClock:
+    .dw printSystemInfo
+    .dw receiveOS
+    .dw setDateTime
+    .dw exit
+itemTableNoClock:
+    .dw printSystemInfo
+    .dw receiveOS
+    .dw exit
     
 printSystemInfo:
     pcall(clearBuffer)
@@ -181,6 +220,8 @@ _:  pcall(fastCopy)
     kld(hl, notFoundStr)
     jr .writeVersion
 
+#include "datetime.asm"
+
 receiveOS:
     pcall(clearBuffer)
     
@@ -253,13 +294,15 @@ receiveOS:
         pcall(putSpriteXOR)
     pop af
     ret
-    
+
 exit:
     pop hl
     ret
     
 item:
     .db 0
+clock_supported:
+    .db 1
 corelibPath:
     .db "/lib/core", 0
 etcVersion:
@@ -281,9 +324,11 @@ confirmUpgradeStr:
     .db "    Proceed", 0
     
 systemInfoStr:
-    .db "System Info\n"
+    .db "System Info\n", 0
 receiveOSStr:
-    .db "Receive OS Upgrade\n"
+    .db "Receive OS Upgrade\n", 0
+setDateTimeStr:
+    .db "Set Date/Time\n", 0
 backStr:
     .db "Back", 0
 notFoundStr:
