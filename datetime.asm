@@ -133,6 +133,7 @@ setDateTime:
 .waitForKey:
     pcall(flushKeys)
     corelib(appWaitKey)
+    kjp(nz, .redraw)
     
     ; arrow keys (move selected field)
     cp kRight
