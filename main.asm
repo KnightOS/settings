@@ -28,14 +28,11 @@ redraw:
     corelib(drawWindow)
     
     ; Print items
-    ld de, 0x0508
+    ld de, 0x0608
     kld(hl, systemInfoStr)
     ld b, 6
     pcall(drawStr)
-    
-    kld(hl, backStr)
-    pcall(drawStr)
-    
+
     pcall(newline)
 _:
     kld(hl, (item))
@@ -78,7 +75,7 @@ doUp:
     pcall(putSpriteXOR)
     xor a
     ret
-#define NB_ITEM 2
+#define NB_ITEM 3
 doDown:
     kld(hl, item)
     ld a, (hl)
@@ -106,7 +103,7 @@ doSelect:
     jp (hl)
     
 itemTable:
-    .dw printSystemInfo, exit
+    .dw printSystemInfo, receiveOS, exit
     
 printSystemInfo:
     pcall(clearBuffer)
@@ -183,6 +180,79 @@ _:  pcall(fastCopy)
     pop de
     kld(hl, notFoundStr)
     jr .writeVersion
+
+receiveOS:
+    pcall(clearBuffer)
+    
+    kld(hl, windowTitle)
+    xor a
+    corelib(drawWindow)
+
+    ld de, 0x0208
+    ld b, 2
+    kld(hl, confirmUpgradeStr)
+    pcall(drawStr)
+
+    xor a
+    kld((.cursor), a)
+    kcall(.invertCursor)
+.loop:
+    pcall(fastCopy)
+    pcall(flushKeys)
+    pcall(waitKey)
+    cp kDown
+    jr z, .handleDown
+    cp kUp
+    jr z, .handleUp
+    cp kEnter
+    jr z, .handleSelect
+    cp k2nd
+    jr z, .handleSelect
+    cp kClear
+    ret z
+    jr .loop
+
+.handleDown:
+    kld(a, (.cursor))
+    cp 1
+    jr z, .loop
+    kcall(.invertCursor)
+    inc a
+    kcall(.invertCursor)
+    kld((.cursor), a)
+    jr .loop
+
+.handleUp:
+    kld(a, (.cursor))
+    or a
+    jr z, .loop
+    kcall(.invertCursor)
+    dec a
+    kcall(.invertCursor)
+    kld((.cursor), a)
+    jr .loop
+
+.handleSelect:
+    kld(a, (.cursor))
+    or a
+    ret z
+    ; Here goes nothing
+    kjp(bootCodeReceiveOS)
+
+.cursor:
+    .db 0
+
+.invertCursor:
+    push af
+        kld(hl, caretIcon)
+        ld de, 0x0220
+        add a, a \ ld b, a \ add a, a \ add a, b ; A *= 6
+        add a, e
+        ld e, a
+        ld b, 5
+        pcall(putSpriteXOR)
+    pop af
+    ret
     
 exit:
     pop hl
@@ -202,9 +272,18 @@ kernelVersionStr:
     .db "Kernel version:\n", 0
 bootCodeVersionStr:
     .db "Boot Code version:\n", 0
+confirmUpgradeStr:
+    .db "Warning! Upgrading your\n"
+    .db "operating system may\n"
+    .db "result in data loss.\n"
+    .db "\n"
+    .db "    Cancel\n"
+    .db "    Proceed", 0
     
 systemInfoStr:
-    .db "System info\n", 0
+    .db "System Info\n"
+receiveOSStr:
+    .db "Receive OS Upgrade\n"
 backStr:
     .db "Back", 0
 notFoundStr:
@@ -216,3 +295,85 @@ caretIcon:
     .db 0b11100000
     .db 0b11000000
     .db 0b10000000
+
+; From UOSRECV
+; TODO: Fully port UOSRECV including unsigned patches
+bootCodeReceiveOS:
+    di
+    pcall(unlockFlash)
+    pcall(getBootPage)
+	out (0x06), a
+	kld(ix, jumpPointPattern)
+	ld de, 0x4000
+	kcall(findPattern)
+    kld(hl, (foundAddress))
+    ld bc, jumpPointPatternEnd - jumpPointPattern
+    add hl, bc
+    ; Off to the boot code!
+    jp (hl)
+
+foundAddress:
+    .dw 0
+
+dummyRet:
+    ret
+
+jumpPointPattern:
+	ld hl, (0x0056)
+	ld bc, 0x0A55A
+	or a
+	sbc hl, bc
+	jp z, 0x0053
+jumpPointPatternEnd:
+	.db 0xFF
+
+findPattern:
+;Pattern in IX, starting address in DE
+;Returns NZ if pattern not found
+;(foundAddress) contains the address of match found
+;Search pattern:	terminated by 0FFh
+;					0FEh is ? (one-byte wildcard)
+;					0FDh is * (multi-byte wildcard)
+	kld(hl, dummyRet)
+	push hl
+	dec de
+searchLoopRestart:
+	inc de
+	kld((foundAddress), de)
+	push ix
+	pop hl
+searchLoop:
+	ld b, (hl)
+	ld a, b
+	inc a
+	or a
+	ret z
+	inc de
+	inc a
+	jr z, matchSoFar
+	dec de
+	inc a
+	ld c, a
+	;At this point, we're either the actual byte (match or no match) (C != 0)
+	;  or * wildcard (keep going until we find our pattern byte) (C == 0)
+	or a
+	jr nz, findByte
+	inc hl
+	ld b, (hl)
+findByte:
+	ld a, (de)
+	inc de
+	bit 7, d
+	ret nz
+	cp b
+	jr z, matchSoFar
+	;This isn't it; do we start over at the beginning of the pattern,
+	;  or do we keep going until we find that byte?
+	inc c
+	dec c
+	jr z, findByte
+	kld(de, (foundAddress))
+	jr searchLoopRestart
+matchSoFar:
+	inc hl
+	jr searchLoop
