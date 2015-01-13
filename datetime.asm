@@ -274,15 +274,20 @@ _:      kld((current_month), a)
     ret
 
 increaseDay:
-    push af
+    push af \ push bc \ push de
+        kld(hl, (current_year))
+        kld(a, (current_month))
+        ld e, a
+        kcall(monthLength)
+        ld b, a
         kld(a, (current_day))
         inc a
-        cp 31
+        cp b
         jr c, +_
         kcall(increaseMonth)
-        sub a, 31
+        sub a, b
 _:      kld((current_day), a)
-    pop af
+    pop de \ pop bc \ pop af
     
     ret
 
@@ -334,15 +339,22 @@ _:      kld((current_month), a)
     ret
 
 decreaseDay:
-    push af
+    push af \ push bc \ push de
         kld(a, (current_day))
         dec a
         cp 128
         jr c, +_
         kcall(decreaseMonth)
-        add a, 31
+        push af
+            kld(hl, (current_year))
+            kld(a, (current_month))
+            ld e, a
+            kcall(monthLength)
+            ld b, a
+        pop af
+        add a, b
 _:      kld((current_day), a)
-    pop af
+    pop de \ pop bc \ pop af
     
     ret
 
@@ -372,6 +384,59 @@ _:      kld((current_minute), a)
     
     ret
 
+
+; TODO The next functions should be moved to the kernel
+
+;; monthLength
+;;   Computes the amount of days in a given month.
+;; Inputs:
+;;   HL: the year
+;;    E: the month (0-11)
+;; Outputs:
+;;    A: the amount of days in this month
+monthLength:
+    ld a, e
+    cp 1
+    jr nz, +_ ; if not February, avoid the costly leap year computation
+    kcall(isLeapYear)
+_:  push hl \ push bc
+        cp 1
+        jr z, +_ ; if a = 1, so we have a leap year
+        kld(hl, month_length_non_leap)
+        jr ++_
+_:      kld(hl, month_length_leap)
+_:      ld b, 0
+        ld c, e
+        add hl, bc
+        ld a, (hl)
+    pop bc \ pop hl
+    
+    ret
+
+;; isLeapYear
+;;   Determines whether the given year is a leap year.
+;; Inputs:
+;;   HL: the year
+;; Outputs:
+;;    A: 1 if it is a leap year; 0 if it is not
+isLeapYear:
+    ; TODO implement
+    ld a, 0
+    
+    ret
+
+;; weekday
+;;   Determines the weekday (Sunday, Monday, ...) of a given date.
+;; Inputs:
+;;   HL: the year
+;;    E: the month (0-11)
+;;    D: the day (0-30)
+;; Outputs:
+;;    B: the weekday (0-6, 0 = Sunday, 6 = Saturday) of the given date
+weekday:
+    ; TODO implement
+    ld b, 0
+    ret
 
 ; variables
 current_year:
@@ -408,3 +473,9 @@ caretDownIcon:
     .db 0b01111100
     .db 0b00111000
     .db 0b00010000
+
+; lengths of the months
+month_length_non_leap:
+    .db 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+month_length_leap:
+    .db 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
