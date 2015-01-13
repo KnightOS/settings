@@ -25,8 +25,8 @@ start:
     ; Check whether the clock is supported
     pcall(getTime)
     ; to test the code path for calculators with no clock:
-    cp a ; set the zero flag
-    jr nz, +_
+    ;cp a ; set the zero flag
+    jr z, +_
     ld a, 0
     kld((clock_supported), a)
 _:
@@ -97,7 +97,16 @@ doDown:
     kld(hl, item)
     ld a, (hl)
     inc a
-    cp NB_ITEM
+    push af
+        ld c, NB_ITEM
+        kld(a, (clock_supported))
+        cp 0
+        jr nz, +_ ; if clock isn't supported, there is one option less
+        ld a, c
+        dec a
+        ld c, a
+_:  pop af
+    cp c
     ret nc
     ld (hl), a
     kld(hl, caretIcon)
