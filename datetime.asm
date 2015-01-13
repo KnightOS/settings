@@ -50,34 +50,33 @@ setDateTime:
         
         ; if a >= 100 we have year "20.."
         cp 100
-        ld de, 0x0220
         jr nc, .drawYear2000
 
 .drawYear1900:
-        ld de, 0x0a20
+        ld de, 0x1724
         kcall(drawDecAPadded)
         
         ; "19"
         ld a, '1'
-        ld de, 0x0220
+        ld de, 0x0f24
         pcall(drawChar)
         ld a, '9'
-        ld de, 0x0620
+        ld de, 0x1324
         pcall(drawChar)
         
         jr .endDrawYear
 
 .drawYear2000:
         sub 100
-        ld de, 0x0a20
+        ld de, 0x1724
         kcall(drawDecAPadded)
         
         ; "20"
         ld a, '2'
-        ld de, 0x0220
+        ld de, 0x0f24
         pcall(drawChar)
         ld a, '0'
-        ld de, 0x0620
+        ld de, 0x1324
         pcall(drawChar)
 
 .endDrawYear:
@@ -86,31 +85,31 @@ setDateTime:
     ; now, draw the month and day
     kld(a, (current_month))
     inc a
-    ld de, 0x1620
+    ld de, 0x2324
     kcall(drawDecAPadded)
     kld(a, (current_day))
     inc a
-    ld de, 0x2220
+    ld de, 0x2f24
     kcall(drawDecAPadded)
     
     ; the dashes
     ld a, '-'
-    ld de, 0x1220
+    ld de, 0x1f24
     pcall(drawChar)
-    ld de, 0x1e20
+    ld de, 0x2b24
     pcall(drawChar)
 
 .drawTime:
     kld(a, (current_hour))
-    ld de, 0x3220
+    ld de, 0x3f24
     kcall(drawDecAPadded)
     kld(a, (current_minute))
-    ld de, 0x3c20
+    ld de, 0x4924
     kcall(drawDecAPadded)
     
     ; the colon
     ld a, ':'
-    ld de, 0x3a20
+    ld de, 0x4724
     pcall(drawChar)
     
 .drawSelection:
@@ -120,11 +119,11 @@ setDateTime:
     ld e, a
     add hl, de
     ld d, (hl)
-    ld e, 0x1c
+    ld e, 0x20
     ld b, 3
     kld(hl, caretUpIcon)
     pcall(putSpriteOR)
-    ld e, 0x26
+    ld e, 0x2a
     ld b, 3
     kld(hl, caretDownIcon)
     pcall(putSpriteOR)
@@ -399,7 +398,7 @@ instruction_message:
     .db "Use the arrow keys to set the\nclock and press Enter to\nsave or Clear to cancel.", 0
 
 selected_field_indicator_x:
-    .db 6, 22, 34, 50, 60
+    .db 19, 35, 47, 63, 73
 
 caretUpIcon:
     .db 0b00010000
