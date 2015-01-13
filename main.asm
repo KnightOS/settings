@@ -22,6 +22,15 @@ start:
     kld(de, corelibPath)
     pcall(loadLibrary)
     
+    ; Check whether the clock is supported
+    pcall(getTime)
+    ; to test the code path for calculators with no clock:
+    cp a ; set the zero flag
+    jr nz, +_
+    ld a, 0
+    kld((clock_supported), a)
+_:
+    
 redraw:
     kld(hl, windowTitle)
     xor a
@@ -34,13 +43,16 @@ redraw:
     pcall(drawStr)
     kld(hl, receiveOSStr)
     pcall(drawStr)
+    kld(a, (clock_supported))
+    cp 0
+    jr z, +_
     kld(hl, setDateTimeStr)
     pcall(drawStr)
-    kld(hl, backStr)
+_:  kld(hl, backStr)
     pcall(drawStr)
     pcall(newline)
-_:
-    kld(hl, (item))
+    
+_:  kld(hl, (item))
     add hl, hl
     ld b, h
     ld c, l
@@ -95,7 +107,7 @@ doDown:
 doSelect:
     kld(hl, (item))
     ld h, 0
-    kld(de, itemTable)
+    kld(de, itemTableClock)
     add hl, hl
     add hl, de
     ld e, (hl)
@@ -107,10 +119,14 @@ doSelect:
     pop de \ kld(de, redraw) \ push de
     jp (hl)
     
-itemTable:
+itemTableClock:
     .dw printSystemInfo
     .dw receiveOS
     .dw setDateTime
+    .dw exit
+itemTableNoClock:
+    .dw printSystemInfo
+    .dw receiveOS
     .dw exit
     
 printSystemInfo:
@@ -270,6 +286,8 @@ exit:
     
 item:
     .db 0
+clock_supported:
+    .db 1
 corelibPath:
     .db "/lib/core", 0
 etcVersion:

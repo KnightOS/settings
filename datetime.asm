@@ -5,11 +5,6 @@ setDateTime:
     ;        A   IX  L  H  B  C  D
     pcall(getTime)
     
-    ; to test the code path for calculators with no clocks:
-    ;ld a, errUnsupported
-    cp errUnsupported
-    kjp(z, unsupported)
-    
     kld((current_year), ix)
     ld a, l
     kld((current_month), a)
@@ -189,16 +184,6 @@ _:
     ret
 _:  
     jr .waitForKey
-
-unsupported:
-    
-    kld(hl, clock_unsupported_message)
-    kld(de, clock_unsupported_options)
-    ld a, 0
-    ld b, 0
-    corelib(showMessage)
-    
-    ret
 
 ; Draws A (assumed < 100) as a decimal number, padded with a leading zero if it
 ; is < 10.
