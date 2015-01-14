@@ -188,7 +188,6 @@ _:
 ; Draws A (assumed < 100) as a decimal number, padded with a leading zero if it
 ; is < 10.
 drawDecAPadded:
-    
     cp 10
     jr nc, .noPadding
     
