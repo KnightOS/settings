@@ -267,7 +267,7 @@ increaseDay:
         kld(hl, (current_year))
         kld(a, (current_month))
         ld e, a
-        kcall(monthLength)
+        pcall(monthLength)
         ld b, a
         kld(a, (current_day))
         inc a
@@ -338,7 +338,7 @@ decreaseDay:
             kld(hl, (current_year))
             kld(a, (current_month))
             ld e, a
-            kcall(monthLength)
+            pcall(monthLength)
             ld b, a
         pop af
         add a, b
@@ -378,7 +378,7 @@ ensureDayWithinBounds:
     kld(hl, (current_year))
     kld(a, (current_month))
     ld e, a
-    kcall(monthLength)
+    pcall(monthLength)
     ld b, a
     
     kld(a, (current_day))
@@ -390,110 +390,6 @@ ensureDayWithinBounds:
     kld((current_day), a)
 _:  ret
 
-
-; TODO The next functions should be moved to the kernel
-
-;; monthLength
-;;   Computes the amount of days in a given month.
-;; Inputs:
-;;   HL: the year
-;;    E: the month (0-11)
-;; Outputs:
-;;    A: the amount of days in this month
-monthLength:
-    ld a, e
-    cp 1
-    jr nz, +_ ; if not February, avoid the costly leap year computation
-    kcall(isLeapYear)
-_:  push hl \ push bc
-        cp 1
-        jr z, +_ ; if a = 1, so we have a leap year
-        kld(hl, month_length_non_leap)
-        jr ++_
-_:      kld(hl, month_length_leap)
-_:      ld b, 0
-        ld c, e
-        add hl, bc
-        ld a, (hl)
-    pop bc \ pop hl
-    
-    ret
-
-;; isLeapYear
-;;   Determines whether the given year is a leap year.
-;; Inputs:
-;;   HL: the year
-;; Outputs:
-;;    A: 1 if it is a leap year; 0 if it is not
-isLeapYear:
-    
-    push bc \ push de
-        
-        ; divisible by 400?
-        ld a, h
-        ld c, l
-        ld de, 400
-        pcall(divACByDE) ; remainder in hl
-        
-        ld a, h
-        cp 0
-        jr nz, .notDivisibleBy400
-        ld a, l
-        cp 0
-        jr nz, .notDivisibleBy400
-    pop de \ pop bc
-    
-    ld a, 1
-    ret
-    
-.notDivisibleBy400:
-        
-        ; divisible by 100?
-        ld c, 100
-        push hl
-            pcall(divHLByC) ; remainder in a
-            cp 0
-            jr nz, .notDivisibleBy100
-        pop hl
-    pop de \ pop bc
-    
-    ld a, 0
-    ret
-    
-.notDivisibleBy100:
-        pop hl
-        
-        ; divisible by 4?
-        ld c, 4
-        push hl
-            pcall(divHLByC) ; remainder in a
-            cp 0
-            jr nz, .notDivisibleBy4
-        pop hl
-    pop de \ pop bc
-    
-    ld a, 1
-    ret
-    
-.notDivisibleBy4:
-        pop hl
-    pop de \ pop bc
-    
-    ld a, 0
-    ret
-
-;; weekday
-;;   Determines the weekday (Sunday, Monday, ...) of a given date.
-;; Inputs:
-;;   HL: the year
-;;    E: the month (0-11)
-;;    D: the day (0-30)
-;; Outputs:
-;;    B: the weekday (0-6, 0 = Sunday, 6 = Saturday) of the given date
-weekday:
-    ; TODO implement
-    ld b, 0
-    ret
 
 ; variables
 current_year:

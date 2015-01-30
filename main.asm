@@ -23,7 +23,7 @@ start:
     pcall(loadLibrary)
     
     ; Check whether the clock is supported
-    pcall(getTime)
+    pcall(clockSupported)
     ; to test the code path for calculators with no clock:
     ;or 1 ; reset the Z flag
     jr z, +_
