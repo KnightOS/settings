@@ -170,13 +170,13 @@ _:
     cp kEnter
     jr nz, +_
     kld(ix, (current_year))
-    kld((current_month), a)
+    kld(a, (current_month))
     ld l, a
-    kld((current_day), a)
+    kld(a, (current_day))
     ld h, a
-    kld((current_hour), a)
+    kld(a, (current_hour))
     ld b, a
-    kld((current_minute), a)
+    kld(a, (current_minute))
     ld c, a
     ld d, 0
     pcall(convertTimeToTicks)
