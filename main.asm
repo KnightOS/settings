@@ -159,28 +159,23 @@ printSystemInfo:
 
 identifyPlatform:
     pcall(colorSupported)
-    jr nz, _
     kld(hl, platformTI84pCSEStr)
-    jr identifiedPlatform
-_:  in a, (2)
+    jr z, identifiedPlatform
+    in a, (0x02)
     bit 1, a
-    jr nz, _
     kld(hl, platformTI73Str)
-    jr identifiedPlatform
-_:  rlca
-    jr c, _
+    jr z, identifiedPlatform
+    rlca
     kld(hl, platformTI83pStr)
-    jr identifiedPlatform
-_:  and 0x40
-    jr nz, _
+    jr nc, identifiedPlatform
+    and 0x40
     kld(hl, platformTI83pSEStr)
-    jr identifiedPlatform
-_:  in a, (21h)
+    jr z, identifiedPlatform
+    in a, (0x21)
     and 0x03
-    jr nz, _
     kld(hl, platformTI84pStr)
-    jr identifiedPlatform
-_:  kld(hl, platformTI84pSEStr)
+    jr z, identifiedPlatform
+    kld(hl, platformTI84pSEStr)
 
 identifiedPlatform:
     inc d
