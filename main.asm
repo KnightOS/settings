@@ -17,11 +17,11 @@ start:
     pcall(getKeypadLock)
 
     pcall(allocScreenBuffer)
-    
+
     ; Load dependencies
     kld(de, corelibPath)
     pcall(loadLibrary)
-    
+
     ; Check whether the clock is supported
     pcall(getTime)
     ; to test the code path for calculators with no clock:
@@ -30,12 +30,12 @@ start:
     ld a, 0
     kld((clock_supported), a)
 _:
-    
+
 redraw:
     kld(hl, windowTitle)
     xor a
     corelib(drawWindow)
-    
+
     ; Print items
     ld de, 0x0608
     kld(hl, systemInfoStr)
@@ -51,7 +51,7 @@ redraw:
 _:  kld(hl, backStr)
     pcall(drawStr)
     pcall(newline)
-    
+
 _:  kld(hl, (item))
     add hl, hl
     ld b, h
@@ -80,7 +80,7 @@ _:  kld(hl, (item))
     cp kMode
     ret z
     jr -_
-    
+
 doUp:
     kld(hl, item)
     ld a, (hl)
@@ -133,7 +133,7 @@ _:  pop af
     add hl, de
     pop de \ kld(de, redraw) \ push de
     jp (hl)
-    
+
 itemTableClock:
     .dw printSystemInfo
     .dw receiveOS
@@ -143,53 +143,62 @@ itemTableNoClock:
     .dw printSystemInfo
     .dw receiveOS
     .dw exit
-    
+
 printSystemInfo:
     pcall(clearBuffer)
-    
+
     kld(hl, windowTitle)
     xor a
     corelib(drawWindow)
-    
+
     ld de, 0x0208
     ld b, 2
 
-    kld(hl, systemVersionStr)
+    kld(hl, knightOSForStr)
     pcall(drawStr)
 
-    push de
-        kld(de, etcVersion)
-        pcall(openFileRead)
-        jr nz, .noVersion
-        pcall(getStreamInfo)
-        pcall(malloc)
-        inc bc
-        pcall(streamReadToEnd)
-        pcall(closeStream)
-        push ix \ pop hl
-        add hl, bc
-        dec hl
-        xor a
-        ld (hl), a
-        push ix \ pop hl
-    pop de
-.writeVersion:
-    ld b, 2
-    inc d \ inc d \ inc d
+identifyPlatform:
+    pcall(colorSupported)
+    jr nz, _
+    kld(hl, platformTI84pCSEStr)
+    jr identifiedPlatform
+_:  in a, (2)
+    bit 1, a
+    jr nz, _
+    kld(hl, platformTI73Str)
+    jr identifiedPlatform
+_:  rlca
+    jr c, _
+    kld(hl, platformTI83pStr)
+    jr identifiedPlatform
+_:  and 0x40
+    jr nz, _
+    kld(hl, platformTI83pSEStr)
+    jr identifiedPlatform
+_:  in a, (21h)
+    and 0x03
+    jr nz, _
+    kld(hl, platformTI84pStr)
+    jr identifiedPlatform
+_:  kld(hl, platformTI84pSEStr)
+
+identifiedPlatform:
+    inc d
     pcall(drawStr)
-    pcall(free)
+    pcall(newline)
+    pcall(newline)
 
     kld(hl, kernelVersionStr)
     pcall(drawStr)
-    
+
     ld hl, kernelVersion
     inc d \ inc d \ inc d
     pcall(drawStr)
     pcall(newline)
-    
+
     kld(hl, bootCodeVersionStr)
     pcall(drawStr)
-    
+
     pcall(getBootCodeVersionString)
     inc d \ inc d \ inc d
     pcall(drawStr)
@@ -215,18 +224,13 @@ _:  pcall(fastCopy)
     jr nz, -_
     ret
 
-.noVersion:
-    pop de
-    kld(hl, notFoundStr)
-    jr .writeVersion
-
 #include "datetime.asm"
 #include "upgrade.asm"
 
 exit:
     pop hl
     ret
-    
+
 item:
     .db 0
 clock_supported:
@@ -237,8 +241,8 @@ etcVersion:
     .db "/etc/version", 0
 windowTitle:
     .db "System Settings", 0
-systemVersionStr:
-    .db "KnightOS version:\n", 0
+knightOSForStr:
+    .db "KnightOS for the", 0
 kernelVersionStr:
     .db "Kernel version:\n", 0
 bootCodeVersionStr:
@@ -250,7 +254,20 @@ confirmUpgradeStr:
     .db "\n"
     .db "    Cancel\n"
     .db "    Proceed", 0
-    
+
+platformTI73Str:
+    .db "TI-73", 0
+platformTI83pStr:
+    .db "TI-83+", 0
+platformTI83pSEStr:
+    .db "TI-83+ SE", 0
+platformTI84pStr:
+    .db "TI-84+", 0
+platformTI84pSEStr:
+    .db "TI-84+ SE", 0
+platformTI84pCSEStr:
+    .db "TI-84+ CSE", 0
+
 systemInfoStr:
     .db "System Info\n", 0
 receiveOSStr:
@@ -259,8 +276,6 @@ setDateTimeStr:
     .db "Set Date/Time\n", 0
 backStr:
     .db "Back", 0
-notFoundStr:
-    .db "Not found\n", 0
 
 caretIcon:
     .db 0b10000000
