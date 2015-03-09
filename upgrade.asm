@@ -76,15 +76,16 @@ receiveOS:
 bootCodeReceiveOS:
     di
     pcall(unlockFlash)
-    pcall(getBootPage)
     pcall(colorSupported)
     jr nz, .notColor
+    pcall(getBootPage)
     and 0x7F
     out (0x06), a
     ld a, 1
     out (0x0E), a
     jr .color
 .notColor:
+    pcall(getBootPage)
     out (0x06), a
 .color:
     kld(ix, jumpPointPattern)
