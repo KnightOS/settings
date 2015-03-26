@@ -237,7 +237,7 @@ etcVersion:
 windowTitle:
     .db "System Settings", 0
 knightOSForStr:
-    .db "KnightOS for the", 0
+    .db "KnightOS ", 0
 kernelVersionStr:
     .db "Kernel version:\n", 0
 bootCodeVersionStr:
@@ -278,3 +278,7 @@ caretIcon:
     .db 0b11100000
     .db 0b11000000
     .db 0b10000000
+    
+    ; additional byte to avoid a KFS (?) bug
+    ; see https://github.com/KnightOS/KnightOS/issues/296
+    nop
