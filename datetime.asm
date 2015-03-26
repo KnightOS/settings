@@ -104,7 +104,7 @@ setDateTime:
     
     ; the colon
     ld a, ':'
-    ld de, 0x4724
+    ld de, 0x4624
     pcall(drawChar)
     
 .drawSelection:
@@ -517,7 +517,7 @@ clock_unsupported_options:
     .db "Back", 0
 
 instruction_message:
-    .db "Use the arrow keys to set the\nclock and press Enter to\nsave or Clear to cancel.", 0
+    .db "Use the arrow keys to\nset the clock and press\nEnter to save or Clear\nto cancel.", 0
 
 selected_field_indicator_x:
     .db 19, 35, 47, 63, 73
